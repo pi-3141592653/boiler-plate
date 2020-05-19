@@ -10,13 +10,15 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json())
 
+
+const config = require('./config/key');
 mongoose.connect(
-    'mongodb+srv://jello:asdf1234@cluster0-wn8m9.mongodb.net/test?retryWrites=true&w=majority', 
+    config.mongoURI, 
     {useNewUrlParser:true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false}
 ).then(() => console.log('MongoDB Connected...'))
  .catch(err => console.log(err));
 
-app.get('/', (req,res) => res.send('Hello World!'));
+app.get('/', (req,res) => res.send('Hello World!!!'));
 
 app.post('/register',(req,res) => {
     //회원가입에 필요한 정보를 가져옴
