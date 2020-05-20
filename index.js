@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({extended:true}));
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 
 const config = require('./config/key');
@@ -33,4 +33,4 @@ app.post('/register',(req,res) => {
     })
 });
 
-app.listen(port,() => console.log(`Example app listening on port ${port}!`))
+app.listen(port,() => console.log(`Example app listening on port ${port}!`));
