@@ -68,12 +68,26 @@ userSchema.methods.comparePassword = function(plainPassword, cb) {
 
 userSchema.methods.generateToken = function(cb) {
     var user = this;
-    var token = jwt.sign(user._id.toHexString(), 'token');
+    var token = jwt.sign(user._id.toHexString(), 'secretToken');
     user.token = token;
     user.save (function(err,user) {
         if(err) return cb(err)
         cb(null, user)
     });
+}
+
+userSchema.statics.findByToken = function(token, cb) {
+    var user = this;
+    
+    //토큰을 decode
+    jwt.verify(token, "secretToken", function(err, decoded){
+        //userid를 이용해서 userid 찾은다음
+        //token을 비교
+        user.findOne({"_id":decoded,"token": token}, function(err,user){
+            if(err) return cb(err);
+            cb(null,user)
+        })
+    })
 }
 
 const User = mongoose.model('User', userSchema);

@@ -3,6 +3,7 @@ const app = express();
 const port = 3000
 
 const { User } = require("./models/User");
+const { auth } = require("./middleware/auth");
 
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -15,16 +16,16 @@ app.use(cookieParser());
 
 const config = require('./config/key');
 mongoose
-.connect(
-    config.mongoURI, 
-    {useNewUrlParser:true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false}
-)
-.then(() => console.log('MongoDB Connected...'))
-.catch(err => console.log(err));
+    .connect(
+        config.mongoURI, 
+        {useNewUrlParser:true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false}
+    )
+    .then(() => console.log('MongoDB Connected...'))
+    .catch(err => console.log(err));
 
 app.get('/', (req,res) => res.send('Hello World!!!'));
 
-app.post('/register',(req,res) => {
+app.post('/api/users/register',(req,res) => {
     //회원가입에 필요한 정보를 가져옴
     // 가져온 정보를 데이터베이스에 입력
     const user = new User(req.body)
@@ -37,7 +38,7 @@ app.post('/register',(req,res) => {
     })
 });
 
-app.post('/login', (req,res)=> {
+app.post('/api/users/login', (req,res)=> {
     // 이메일 확인
     User.findOne({ email: req.body.email }, (err,user) => {
         if(!user) {
@@ -56,13 +57,39 @@ app.post('/login', (req,res)=> {
                 if(err) return res.status(400).send(err);
                 
                 // 토큰을 저장
-                res
-                .cookie("x_auth", user.token)
-                .status(200)
-                .json({loginSuccess: true, userId: user._id});
+                res.cookie("x_auth", user.token)
+                   .status(200)
+                   .json({loginSuccess: true, userId: user._id});
             });
         });
     });
+});
+
+app.get('/api/users/auth', auth, (req,res) => {
+    // 여기까지 middleware를 통과했다는 말은 인증 성공임
+    res.status(200).json({
+        _id: req.user.userId,
+        isAdmin: req.token.role === 0 ? false : true,
+        isAuth: true,
+        email: req.user.email,
+        name: req.user.name,
+        lastname: req.user.lastname,
+        role: req.user.role,
+        image: req.user.image
+    })
+});
+
+app.get('/api/users/logout', auth, (req,res) => {
+    
+    User.findOneAndUpdate(
+        {_id: req.user._id}, 
+        {token: ""}, 
+        (err,user) => {
+            if(err) return res.json({ success: false, err});
+            return res.status(200).send({
+                success: true
+            })
+    })
 });
 
 app.listen(port,() => console.log(`Example app listening on port ${port}!`));
